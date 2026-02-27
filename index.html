@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>HPR Pace Checker</title>
+<style>
+  :root{
+    --bg:#f6f8fc; --card:#fff; --text:#0f172a; --muted:#64748b; --line:#e5e7eb;
+    --blue:#0b3aa8; --blue2:#1e4fbf; --orange:#f97316;
+    --good:#16a34a; --bad:#dc2626; --warn:#d97706;
+    --shadow:0 10px 26px rgba(2,6,23,.08);
+    --radius:14px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  .topbar{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+    padding:14px 16px;background:linear-gradient(90deg,var(--blue),var(--blue2));
+    color:#fff;border-bottom:3px solid var(--orange)
+  }
+  .topbar h1{margin:0;font-size:16px;font-weight:900;letter-spacing:.2px}
+  .topbar .sub{margin-top:6px;font-size:12px;opacity:.92;line-height:1.35;max-width:760px}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 10px;font-size:12px}
+  .mono{font-family:var(--mono)}
+  .wrap{max-width:1050px;margin:0 auto;padding:16px}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:900px){.grid{grid-template-columns:1.2fr .8fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+  .card h2{margin:0 0 10px 0;font-size:13px;letter-spacing:.25px;text-transform:uppercase;color:var(--muted)}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:900}
+  input,select{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;font-size:14px;outline:none;background:#fff;color:var(--text)}
+  input::placeholder{color:#94a3b8}
+  .row{display:grid;grid-template-columns:1fr;gap:10px}
+  @media(min-width:700px){.row.cols2{grid-template-columns:1fr 1fr}.row.cols3{grid-template-columns:1fr 1fr 1fr}}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:10px;padding:10px 12px;font-weight:900;font-size:13px;cursor:pointer}
+  .btn.primary{background:var(--blue2);color:#fff;border-color:transparent}
+  .btn.primary:hover{background:var(--blue)}
+  .btn:hover{border-color:#cbd5e1}
+  .btn.ghost{background:transparent;border-color:rgba(255,255,255,.35);color:#fff}
+  .btn.ghost:hover{background:rgba(255,255,255,.10)}
+  .status{
+    margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:14px;
+    background:linear-gradient(180deg,#ffffff,#fbfdff);
+    display:flex;justify-content:space-between;gap:12px;align-items:flex-start
+  }
+  .status .title{font-size:18px;font-weight:1000;margin:0}
+  .status .detail{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.35}
+  .status.good{border-color:rgba(22,163,74,.35)}
+  .status.bad{border-color:rgba(220,38,38,.35)}
+  .status.warn{border-color:rgba(217,119,6,.35)}
+  .status.good .title{color:var(--good)}
+  .status.bad .title{color:var(--bad)}
+  .status.warn .title{color:var(--warn)}
+  .kpis{margin-top:12px;display:grid;grid-template-columns:1fr;gap:10px}
+  @media(min-width:700px){.kpis{grid-template-columns:1fr 1fr}}
+  .kpi{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+  .kpi .k{font-size:12px;color:var(--muted);font-weight:900}
+  .kpi .v{margin-top:6px;font-size:20px;font-weight:1000;letter-spacing:.2px}
+  .divider{height:1px;background:var(--line);margin:12px 0}
+  .hint{color:var(--muted);font-size:12px;line-height:1.4;margin-top:8px}
+  .tiny{font-size:11px;color:var(--muted);line-height:1.35}
+</style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div>
+      <h1>HPR Pace Checker</h1>
+      <div class="sub">
+        Pick the <b>Line</b>, enter today’s <b>Day Volume</b>, select the <b>Hour</b>, and enter your <b>Actual units this hour</b>.
+        The app uses the <b>current time</b> to show whether you’re on pace <b>within the hour</b>.
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;white-space:nowrap">
+      <div class="pill"><span>Now</span><span class="mono" id="nowClock">--:--</span></div>
+      <button class="btn ghost" id="clockBtn" type="button">Clock: ON</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="grid">
+      <section class="card">
+        <h2>Inputs</h2>
+
+        <div class="row cols3">
+          <div>
+            <label>Line</label>
+            <select id="lineSel"></select>
+            <div class="tiny">Stored on this device.</div>
+          </div>
+          <div>
+            <label>Day Volume (units scheduled today)</label>
+            <input id="dayVol" type="number" min="0" inputmode="numeric" placeholder="e.g., 385" />
+          </div>
+          <div>
+            <label>Hour</label>
+            <select id="hourSel"></select>
+            <div class="tiny">Default shift: 06:00–14:30</div>
+          </div>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px">
+          <div>
+            <label>Actual Units (this hour so far)</label>
+            <input id="actual" type="number" min="0" inputmode="numeric" placeholder="e.g., 42" />
+          </div>
+          <div>
+            <label>Target Mode</label>
+            <select id="mode">
+              <option value="100">100% (Hit Plan)</option>
+              <option value="105">105% (Recovery)</option>
+              <option value="110">110% (Aggressive)</option>
+            </select>
+            <div class="tiny">This multiplies the hourly target.</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="calcBtn" type="button">Check Pace</button>
+          <button class="btn" id="useNowBtn" type="button">Set Hour to Now</button>
+          <button class="btn" id="saveBtn" type="button">Save Day Volume</button>
+          <button class="btn" id="clearBtn" type="button">Clear</button>
+        </div>
+
+        <div class="status" id="statusBox">
+          <div>
+            <div class="title" id="statusTitle">Waiting for input</div>
+            <div class="detail" id="statusDetail">Enter Day Volume + Actual units, then Check Pace.</div>
+          </div>
+          <div class="pill"><span>Now Pace Target</span><span class="mono" id="inlineTarget">—</span></div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi">
+            <div class="k">Expected Units by Now (within hour)</div>
+            <div class="v" id="expNow">—</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Delta vs Expected Now</div>
+            <div class="v" id="deltaNow">—</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Mode Hour Target (full hour)</div>
+            <div class="v" id="hourTarget">—</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Remaining to Hit Mode Target</div>
+            <div class="v" id="remain">—</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="hint" id="timingHint">If you select the current hour, elapsed minutes are calculated automatically.</div>
+      </section>
+
+      <aside class="card">
+        <h2>Shift Settings</h2>
+
+        <div class="row cols2">
+          <div>
+            <label>Shift Start</label>
+            <input id="shiftStart" type="time" value="06:00" />
+          </div>
+          <div>
+            <label>Shift End</label>
+            <input id="shiftEnd" type="time" value="14:30" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="applyShiftBtn" type="button">Apply Shift</button>
+          <button class="btn" id="resetShiftBtn" type="button">Reset Shift</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="tiny">
+          <b>How target is calculated:</b><br/>
+          Hourly base target = <span class="mono">Day Volume ÷ (total shift minutes ÷ 60)</span><br/>
+          Expected-now = <span class="mono">Mode Hour Target × (minutes elapsed in hour ÷ hour duration)</span><br/><br/>
+          If you want this to pull exact hourly targets from your HPR tracker instead of using Day Volume math, tell me and I’ll wire in CSV import.
+        </div>
+      </aside>
+    </div>
+  </div>
+
+<script>
+const LS = {
+  line: "hpr_line_selected_v1",
+  dayVol: "hpr_day_volume_v1",
+  shift: "hpr_shift_v1"
+};
+
+const LINES = ["LINE1","LINE2","LINE3","CASEMENT","PICTURES"];
+
+const $ = (id)=>document.getElementById(id);
+
+let clockOn = true;
+let timer = null;
+
+function pad(n){ return String(n).padStart(2,"0"); }
+function nowHHMM(){
+  const d = new Date();
+  return pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+function parseTimeToMinutes(hhmm){
+  const [h,m] = hhmm.split(":").map(Number);
+  return h*60 + m;
+}
+function minutesToHHMM(mins){
+  const h = Math.floor(mins/60);
+  const m = mins % 60;
+  return pad(h)+":"+pad(m);
+}
+function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+
+function loadShift(){
+  try{
+    const raw = localStorage.getItem(LS.shift);
+    if(!raw) return { start:"06:00", end:"14:30" };
+    const o = JSON.parse(raw);
+    if(!o || !o.start || !o.end) return { start:"06:00", end:"14:30" };
+    return o;
+  }catch{
+    return { start:"06:00", end:"14:30" };
+  }
+}
+function saveShift(start,end){
+  localStorage.setItem(LS.shift, JSON.stringify({start,end}));
+}
+function buildLineDropdown(){
+  const sel = $("lineSel");
+  sel.innerHTML = "";
+  for(const l of LINES){
+    const opt = document.createElement("option");
+    opt.value = l; opt.textContent = l;
+    sel.appendChild(opt);
+  }
+  const saved = localStorage.getItem(LS.line);
+  if(saved && LINES.includes(saved)) sel.value = saved;
+}
+function buildHourDropdown(){
+  const {start,end} = loadShift();
+  $("shiftStart").value = start;
+  $("shiftEnd").value = end;
+
+  const s = parseTimeToMinutes(start);
+  const e = parseTimeToMinutes(end);
+  const sel = $("hourSel");
+  sel.innerHTML = "";
+
+  // Build start times stepping by 60, but include a final partial hour if needed.
+  let t = s;
+  while(t < e){
+    const opt = document.createElement("option");
+    opt.value = minutesToHHMM(t);
+    opt.textContent = minutesToHHMM(t);
+    sel.appendChild(opt);
+    t += 60;
+    // If the next step would overshoot but we still have time left, stop; last option already covers it.
+  }
+
+  // Default hour selection = best hour based on now
+  setHourToNow();
+}
+
+function setStatus(kind, title, detail){
+  const box = $("statusBox");
+  box.classList.remove("good","bad","warn");
+  if(kind) box.classList.add(kind);
+  $("statusTitle").textContent = title;
+  $("statusDetail").textContent = detail;
+}
+function setKpi(id, val){ $(id).textContent = val; }
+
+function getSelectedHourWindow(){
+  const hr = $("hourSel").value; // start HH:MM
+  const {start,end} = loadShift();
+  const shiftStart = parseTimeToMinutes(start);
+  const shiftEnd   = parseTimeToMinutes(end);
+
+  const hrStart = parseTimeToMinutes(hr);
+  // duration is normally 60, but may be shorter if last interval
+  const hrEnd = Math.min(hrStart + 60, shiftEnd);
+  const dur = Math.max(0, hrEnd - hrStart);
+  return { hrStart, hrEnd, dur, shiftStart, shiftEnd, start, end };
+}
+
+function setHourToNow(){
+  const now = parseTimeToMinutes(nowHHMM());
+  const sel = $("hourSel");
+  const options = [...sel.options].map(o=>o.value);
+  if(options.length === 0) return;
+
+  // choose latest option where option time <= now, else first
+  let best = options[0];
+  let bestM = parseTimeToMinutes(best);
+  for(const o of options){
+    const m = parseTimeToMinutes(o);
+    if(m <= now && m >= bestM){ best = o; bestM = m; }
+  }
+  sel.value = best;
+}
+
+function calc(){
+  const line = $("lineSel").value;
+  const dayVol = Number($("dayVol").value);
+  const actual = Number($("actual").value);
+  const modePct = Number($("mode").value)/100;
+
+  localStorage.setItem(LS.line, line);
+
+  if(!Number.isFinite(dayVol) || dayVol <= 0){
+    setStatus("warn","Enter Day Volume","Day Volume is required (scheduled units for today).");
+    $("inlineTarget").textContent = "—";
+    setKpi("expNow","—"); setKpi("deltaNow","—"); setKpi("hourTarget","—"); setKpi("remain","—");
+    return;
+  }
+  if(!Number.isFinite(actual) || actual < 0){
+    setStatus("warn","Enter Actual Units","Enter actual units completed so far this hour.");
+    $("inlineTarget").textContent = "—";
+    setKpi("expNow","—"); setKpi("deltaNow","—"); setKpi("hourTarget","—"); setKpi("remain","—");
+    return;
+  }
+
+  const {shiftStart, shiftEnd, dur, hrStart, hrEnd} = getSelectedHourWindow();
+  const totalShiftMinutes = Math.max(1, shiftEnd - shiftStart);
+  const shiftHours = totalShiftMinutes / 60;
+
+  // Base hourly target derived from day volume across shift time
+  const baseHourlyTarget = dayVol / shiftHours;
+
+  // Hour target needs to scale for partial last interval
+  const hourFrac = dur / 60; // 1.0 for full hour, 0.5 for 30 min, etc
+  const baseHourTarget = baseHourlyTarget * hourFrac;
+  const modeHourTarget = baseHourTarget * modePct;
+
+  // Expected by now within the hour:
+  const nowM = parseTimeToMinutes(nowHHMM());
+  const elapsed = clamp(nowM - hrStart, 0, dur);
+  const fracElapsed = (dur > 0) ? (elapsed / dur) : 0;
+  const expectedNow = modeHourTarget * fracElapsed;
+
+  const deltaNow = actual - expectedNow;
+  const remain = Math.max(0, modeHourTarget - actual);
+
+  $("inlineTarget").textContent = expectedNow.toFixed(1);
+  setKpi("expNow", expectedNow.toFixed(1));
+  setKpi("deltaNow", (deltaNow >= 0 ? "+" : "") + deltaNow.toFixed(1));
+  setKpi("hourTarget", modeHourTarget.toFixed(1));
+  setKpi("remain", remain.toFixed(1));
+
+  const isCurrent = (nowM >= hrStart && nowM < hrEnd);
+  const timing = isCurrent
+    ? `Current hour window: ${minutesToHHMM(hrStart)}–${minutesToHHMM(hrEnd)} (${elapsed} min elapsed of ${dur}).`
+    : `Selected hour window: ${minutesToHHMM(hrStart)}–${minutesToHHMM(hrEnd)} (not current hour).`;
+  $("timingHint").textContent = timing;
+
+  if(deltaNow >= 0){
+    setStatus("good","ON TRACK (GREEN)",`${line}: You are on pace by ${deltaNow.toFixed(1)} units vs expected-now.`);
+  }else{
+    setStatus("bad","OFF TRACK (RED)",`${line}: You are behind by ${Math.abs(deltaNow).toFixed(1)} units vs expected-now.`);
+  }
+}
+
+function saveDayVol(){
+  const dayVol = $("dayVol").value;
+  if(dayVol !== "") localStorage.setItem(LS.dayVol, dayVol);
+}
+function loadDayVol(){
+  const v = localStorage.getItem(LS.dayVol);
+  if(v !== null) $("dayVol").value = v;
+}
+
+function startClock(){
+  stopClock();
+  const tick = ()=>{ $("nowClock").textContent = nowHHMM(); };
+  tick();
+  timer = setInterval(tick, 1000);
+}
+function stopClock(){
+  if(timer) clearInterval(timer);
+  timer = null;
+}
+
+$("calcBtn").addEventListener("click", calc);
+$("useNowBtn").addEventListener("click", ()=>{ setHourToNow(); calc(); });
+$("saveBtn").addEventListener("click", ()=>{ saveDayVol(); setStatus("good","Saved","Day Volume saved on this device."); });
+$("clearBtn").addEventListener("click", ()=>{
+  $("actual").value = "";
+  setStatus(null,"Waiting for input","Enter Day Volume + Actual units, then Check Pace.");
+  $("inlineTarget").textContent = "—";
+  setKpi("expNow","—"); setKpi("deltaNow","—"); setKpi("hourTarget","—"); setKpi("remain","—");
+});
+
+$("lineSel").addEventListener("change", ()=>{ localStorage.setItem(LS.line, $("lineSel").value); });
+$("hourSel").addEventListener("change", ()=>{ /* keep */ });
+$("mode").addEventListener("change", ()=>{ if($("actual").value !== "" && $("dayVol").value !== "") calc(); });
+
+$("clockBtn").addEventListener("click", ()=>{
+  clockOn = !clockOn;
+  $("clockBtn").textContent = "Clock: " + (clockOn ? "ON" : "OFF");
+  if(clockOn) startClock(); else stopClock();
+});
+
+$("applyShiftBtn").addEventListener("click", ()=>{
+  const start = $("shiftStart").value || "06:00";
+  const end = $("shiftEnd").value || "14:30";
+  saveShift(start, end);
+  buildHourDropdown();
+  setStatus("good","Shift Applied",`Shift set to ${start}–${end}.`);
+});
+$("resetShiftBtn").addEventListener("click", ()=>{
+  saveShift("06:00","14:30");
+  buildHourDropdown();
+  setStatus("warn","Shift Reset","Shift reset to 06:00–14:30.");
+});
+
+// Init
+buildLineDropdown();
+buildHourDropdown();
+loadDayVol();
+startClock();
+setStatus(null,"Waiting for input","Enter Day Volume + Actual units, then Check Pace.");
+</script>
+</body>
+</html>
