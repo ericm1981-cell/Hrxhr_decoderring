@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b2e75">
+<title>HPR Quick Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#0b2e75;
+  --blue2:#1b4db8;
+  --orange:#ff7a18;
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:rgba(15,23,42,.12);
+  --shadow:0 10px 25px rgba(2,6,23,.08);
+  --r:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,-apple-system,Segoe UI,Roboto,Arial}
+.container{max-width:920px;margin:0 auto;padding:14px}
+.header{
+  background:linear-gradient(180deg,var(--blue),#08306b);
+  color:#fff;border-radius:20px;
+  padding:16px 16px 14px;
+  box-shadow:var(--shadow);
+  position:relative;
+}
+.header .title{font-size:24px;font-weight:800;letter-spacing:.2px}
+.header .sub{margin-top:6px;color:rgba(255,255,255,.88);font-size:14px;line-height:1.25}
+.header .stripe{height:4px;background:var(--orange);border-radius:999px;margin-top:12px;opacity:.95}
+.nowpill{
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.18);
+  color:#fff;border-radius:999px;
+  padding:10px 12px;margin-top:10px;
+  font-weight:800;
+}
+.nowpill span{opacity:.9;font-weight:700}
+.section{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;margin-top:12px;padding:14px;
+  box-shadow:0 2px 0 rgba(2,6,23,.03);
+}
+.h2{font-weight:900;letter-spacing:.08em;color:var(--muted);font-size:13px;margin:0 0 10px}
+.row{display:grid;gap:10px}
+.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:520px){ .cols2{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.label{font-weight:800;color:var(--muted);font-size:13px;margin-top:6px;margin-bottom:6px}
+input,select{
+  width:100%;padding:11px 12px;border-radius:14px;
+  border:1px solid var(--border);background:#fff;
+  font-size:16px;outline:none;
+}
+input:focus,select:focus{border-color:rgba(27,77,184,.45);box-shadow:0 0 0 4px rgba(27,77,184,.12)}
+.tiny{font-size:12px;color:var(--muted);line-height:1.25;margin-top:6px}
+.btn{
+  appearance:none;border:0;border-radius:14px;
+  background:var(--blue2);color:#fff;font-weight:900;
+  padding:12px 14px;cursor:pointer;width:100%;
+  box-shadow:0 10px 18px rgba(27,77,184,.20);
+}
+.btn:active{transform:translateY(1px)}
+/* Line buttons */
+.btnline{display:flex;flex-wrap:wrap;gap:8px}
+.linebtn{
+  appearance:none;border:1px solid rgba(15,23,42,.14);
+  background:#fff;border-radius:999px;padding:10px 12px;
+  font-weight:900;font-size:13px;cursor:pointer;
+}
+.linebtn.active{
+  border-color:rgba(27,77,184,.55);
+  background:linear-gradient(180deg, rgba(27,77,184,.12), rgba(27,77,184,.03));
+  color:#0b2e75;
+}
+.kpiGrid{display:grid;gap:10px;margin-top:10px}
+.kpi{
+  background:#fff;border:1px solid var(--border);
+  border-radius:18px;padding:12px;
+}
+.kpi .k{font-weight:900;color:var(--muted);font-size:13px;margin-bottom:6px}
+.kpi .v{font-weight:900;font-size:30px;line-height:1.05}
+.kpi .v.small{font-size:22px}
+.kpi .note{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.25}
+.bad{color:#b91c1c}
+.good{color:#15803d}
+.warn{color:#b45309}
+.details{margin-top:10px;border:1px dashed rgba(15,23,42,.18);border-radius:16px;padding:12px;background:rgba(2,6,23,.02)}
+.summary{font-weight:900}
+hr{border:0;border-top:1px solid rgba(15,23,42,.08);margin:12px 0}
+
+.playbtn{}
+.playbtn.active{border-color:rgba(255,122,24,.70);background:linear-gradient(180deg, rgba(255,122,24,.14), rgba(255,122,24,.04));color:#7a2b00}
+
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="title">HPR Quick Coach</div>
+    <div class="sub">
+      Current HPR = <b>Produced ÷ Expected-to-Now</b> (time-of-day, breaks excluded).<br/>
+      Use this to answer: <b>“Where do you expect to be?”</b> and <b>“What’s the recovery?”</b>
+    </div>
+    <div class="nowpill"><span>Now</span><div id="nowClock">--:--</div></div>
+    <div class="stripe"></div>
+  </div>
+
+  <div class="section">
+    <div class="h2">INPUTS</div>
+
+    <div class="label">Line</div>
+    <div class="btnline" id="lineButtons"></div>
+    <div class="tiny" id="picsHelp" style="display:none">Px/Sl = cumulative day totals. Day shift view = Shift 1 only. 2nd shift view = Shift 1 + Shift 2 (cumulative).</div>
+
+    <div class="row cols2" style="margin-top:8px">
+      <div>
+        <div class="label">Shift</div>
+        <select id="shiftSel">
+          <option value="DAY" selected>Day Shift (06:00–14:30)</option>
+          <option value="P2">Pictures 2nd Shift (15:30–24:00)</option>
+        </select>
+      </div>
+      <div>
+        <div class="label">Today's Schedule (units)</div>
+        <input id="sched" type="number" inputmode="numeric" min="0" placeholder="0" />
+      </div>
+      <div>
+        <div class="label">Prior Day Carryover (units)</div>
+        <input id="carry" type="number" inputmode="numeric" min="0" placeholder="0" />
+        <div class="tiny">Backlog must be cleared first for earlier delivery.</div>
+      </div>
+      <div>
+        <div class="label">Produced So Far (total today)</div>
+        <input id="done" type="number" inputmode="numeric" min="0" placeholder="0" />
+      </div>
+    </div>
+
+    <details class="details" style="margin-top:10px">
+      <summary class="summary">Current Hour Pace (optional)</summary>
+      <div class="row cols2" style="margin-top:10px;align-items:end">
+        <div>
+          <div class="label" style="margin-top:0">Current Hour Units (so far)</div>
+          <input id="curHour" type="number" inputmode="numeric" min="0" placeholder="0" />
+          <div class="tiny">Enter what you’ve produced so far in the <b>current</b> hour. Tool will tell you what you need to hit by the top of the hour.</div>
+        </div>
+        <div>
+          <button class="btn" id="calcBtn" type="button">Update</button>
+          <div class="tiny">Updates as you type. Button forces refresh.</div>
+        </div>
+      </div>
+
+      <div class="kpiGrid" style="margin-top:10px">
+        <div class="kpi">
+          <div class="k">Current Hour Window</div>
+          <div class="v small" id="hourWin">—</div>
+          <div class="note" id="hourNote">—</div>
+        </div>
+        <div class="row cols2">
+          <div class="kpi">
+            <div class="k">Hour Target (100%)</div>
+            <div class="v" id="hourTarget">—</div>
+            <div class="note">Based on capacity pace (break overlap removed).</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Need to Hit Hour</div>
+            <div class="v" id="hourNeed">—</div>
+            <div class="note" id="hourNeedNote">—</div>
+          </div>
+        </div>
+        <div class="row cols2" style="margin-top:10px">
+          <div class="kpi">
+            <div class="k">Hour Status</div>
+            <div class="v" id="hourStatus">—</div>
+            <div class="note" id="hourStatusNote">—</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Gap Now (units)</div>
+            <div class="v" id="hourDeltaUnits">—</div>
+            <div class="note">Negative = behind vs expected-by-now. Positive = ahead.</div>
+          </div>
+        </div>
+
+      </div>
+    </details>
+  </div>
+
+  <div class="section">
+    <div class="h2">DAY STATUS</div>
+    <div class="kpiGrid">
+      <div class="row cols2">
+        <div class="kpi">
+          <div class="k">Capacity (units)</div>
+          <div class="v" id="capV">—</div>
+          <div class="note">What we’re measured against (455 min available).</div>
+        </div>
+        <div class="kpi">
+          <div class="k">Takt Time (sec/unit)</div>
+          <div class="v" id="taktV">—</div>
+          <div class="note">Based on capacity.</div>
+        </div>
+      </div>
+
+      <div class="row cols2">
+        <div class="kpi">
+          <div class="k">Expected-to-Now (DAY @100%)</div>
+          <div class="v" id="expNowV">—</div>
+          <div class="note" id="expNowNote">—</div>
+        </div>
+        <div class="kpi">
+          <div class="k">Current HPR% (DAY)</div>
+          <div class="v" id="hprV">—</div>
+          <div class="note" id="ctNote">—</div>
+        </div>
+      </div>
+
+      <div class="row cols2">
+        <div class="kpi">
+          <div class="k">Total Required Today</div>
+          <div class="v" id="reqV">—</div>
+          <div class="note">Schedule + Carryover.</div>
+        </div>
+        <div class="kpi">
+          <div class="k">Projected Finish Time</div>
+          <div class="v" id="finishV">—</div>
+          <div class="note" id="finishNote">Projected using <b>DAY HPR</b>.</div>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="k">Win-the-Day Recovery</div>
+        <div class="v small" id="recoveryTitle">—</div>
+        <div class="note" id="recoveryBody">Enter schedule, carryover, and produced to generate recovery guidance.</div>
+      
+      <div class="kpi">
+        <div class="k">Recovery Planning</div>
+        <div class="note">Pick the play(s) you will run in the next 60 minutes. This builds the Teams post.</div>
+        <div class="btnline" id="playButtons" style="margin-top:10px"></div>
+        <div class="row cols2" style="margin-top:10px;align-items:end">
+          <div>
+            <div class="label" style="margin-top:0">Add detail (optional)</div>
+            <input id="playNotes" type="text" placeholder="Ex: Build SWIP at Frame; send helper to Sash; protect constraint at Welder" />
+            <div class="tiny" id="playSelected">Selected: —</div>
+          </div>
+          <div>
+            <button class="btn" id="copyTeamsBtn" type="button">Copy Teams Update</button>
+            <div class="tiny" id="copyMsg">Creates a clean paste for Teams.</div>
+          </div>
+        </div>
+        <div class="details" style="margin-top:10px">
+          <div class="summary">Teams Message Preview</div>
+          <div class="tiny" style="white-space:pre-wrap" id="teamsPreview">—</div>
+        </div>
+      </div>
+</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===== Config ===== */
+const CAPACITY = {
+  LINE1:260,
+  LINE2:385,
+  LINE3:195,
+  CASEMENT:108,
+  PICTURES: {perShift:115, perDay:230} // Px/Sl: schedule+produced are cumulative; perShift=115, perDay=230
+};
+// Day shift windows
+const SHIFT_WINDOWS = {
+  DAY: {start:"06:00", end:"14:30"},
+  P2:  {start:"15:30", end:"24:00"} // pictures only
+};
+// Break/lunch by line for DAY shift only (per your guardrails)
+const BREAKS_DAY = {
+  LINE1: [{s:"09:00", e:"09:15"},{s:"11:45", e:"12:15"}],
+  PICTURES:[{s:"09:00", e:"09:15"},{s:"11:45", e:"12:15"}], // for day shift window
+  CASEMENT:[{s:"08:45", e:"09:00"},{s:"11:15", e:"11:45"}],
+  LINE2:[{s:"09:10", e:"09:25"},{s:"12:15", e:"12:45"}],
+  LINE3:[{s:"09:10", e:"09:25"},{s:"12:15", e:"12:45"}]
+};
+// local storage keys
+const LS = { line:"hpr_line_sel_v1" };
+
+const LINES = [
+  {key:"LINE1", label:"Line 1"},
+  {key:"LINE2", label:"Line 2"},
+  {key:"LINE3", label:"Line 3"},
+  {key:"CASEMENT", label:"Casement"},
+  {key:"PICTURES", label:"Pictures"}
+];
+
+function $(id){ return document.getElementById(id); }
+
+function toMin(hhmm){
+  const [h,m]=hhmm.split(":").map(Number);
+  return h*60+m;
+}
+function nowMin(){
+  const d=new Date();
+  return d.getHours()*60 + d.getMinutes();
+}
+function fmtClock(mins){
+  mins = Math.round(mins);
+  mins = (mins%(24*60)+24*60)%(24*60);
+  const h = Math.floor(mins/60), m=mins%60;
+  const ampm = h>=12?"PM":"AM";
+  const hh = ((h+11)%12)+1;
+  return `${hh}:${String(m).padStart(2,"0")} ${ampm}`;
+}
+function fmtHHMM(mins){
+  mins = Math.round(mins);
+  const h=Math.floor(mins/60), m=mins%60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+
+function getLine(){
+  return localStorage.getItem(LS.line) || "LINE1";
+}
+function setLine(k){
+  localStorage.setItem(LS.line,k);
+  renderLineButtons();
+  // pictures shift availability
+  $("picsHelp").style.display = (k==="PICTURES") ? "block" : "none";
+  // If not pictures, force shift to DAY (keeps UI simple)
+  if(k!=="PICTURES") $("shiftSel").value = "DAY";
+  calc();
+}
+function renderLineButtons(){
+  const wrap = $("lineButtons");
+  wrap.innerHTML="";
+  const cur=getLine();
+  LINES.forEach(ch=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="linebtn"+(cur===ch.key?" active":"");
+    b.textContent=ch.label;
+    b.addEventListener("click",()=>setLine(ch.key));
+    wrap.appendChild(b);
+  });
+}
+
+function clockTick(){
+  const m=nowMin();
+  $("nowClock").textContent = fmtClock(m);
+}
+setInterval(clockTick, 30*1000);
+clockTick();
+
+/* ===== Time math ===== */
+function breaksFor(lineKey, shiftKey){
+  // only DAY breaks defined; if P2, return empty (can add later if you supply times)
+  if(shiftKey!=="DAY") return [];
+  return (BREAKS_DAY[lineKey] || []);
+}
+function shiftWindow(lineKey, shiftKey){
+  if(lineKey==="PICTURES"){
+    // pictures can use DAY or P2; others forced to DAY
+    return SHIFT_WINDOWS[shiftKey] || SHIFT_WINDOWS.DAY;
+  }
+  return SHIFT_WINDOWS.DAY;
+}
+function overlap(a0,a1,b0,b1){
+  const s=Math.max(a0,b0), e=Math.min(a1,b1);
+  return Math.max(0, e-s);
+}
+function availMinutesBetween(lineKey, shiftKey, startMin, endMin){
+  // available = span - breaks overlaps
+  let span=Math.max(0, endMin-startMin);
+  const br=breaksFor(lineKey, shiftKey).map(x=>({s:toMin(x.s), e:toMin(x.e)}));
+  let brMin=0;
+  br.forEach(b=>{ brMin += overlap(startMin,endMin,b.s,b.e); });
+  return Math.max(0, span - brMin);
+}
+
+function computeDayAvail(lineKey, shiftKey){
+  // For Px/Sl (Pictures): Day shift entry is against per-shift capacity/time.
+  // Second shift entry is cumulative (Shift 1 + Shift 2) against full-day capacity/time.
+  if(lineKey==="PICTURES" && shiftKey==="P2"){
+    // Shift 1 fixed window (assume completed for cumulative expected-to-now once 2nd shift starts)
+    const s1s = toMin(SHIFT_WINDOWS.DAY.start), s1e = toMin(SHIFT_WINDOWS.DAY.end);
+    const s2s = toMin(SHIFT_WINDOWS.P2.start), s2e = toMin(SHIFT_WINDOWS.P2.end);
+    const now = nowMin();
+    const clampedNow = Math.max(s2s, Math.min(s2e, now));
+
+    const planned1 = 455; // per your standard
+    const planned2 = 455;
+
+    const elapsed2 = availMinutesBetween(lineKey, "P2", s2s, clampedNow); // no breaks defined for P2
+    const rem2    = availMinutesBetween(lineKey, "P2", clampedNow, s2e);
+
+    return {
+      s:s1s,
+      e:s2e,
+      plannedAvail: planned1 + planned2,
+      elapsedAvail: planned1 + elapsed2,
+      remAvail: rem2,
+      clampedNow
+    };
+  }
+
+  // Default: single window availability
+  const w=shiftWindow(lineKey, shiftKey);
+  const s=toMin(w.start), e=toMin(w.end);
+  const now=nowMin();
+  const clampedNow=Math.max(s, Math.min(e, now));
+  const plannedAvail=availMinutesBetween(lineKey, shiftKey, s, e);
+  const elapsedAvail=availMinutesBetween(lineKey, shiftKey, s, clampedNow);
+  const remAvail=availMinutesBetween(lineKey, shiftKey, clampedNow, e);
+  return {s,e,plannedAvail,elapsedAvail,remAvail,clampedNow};
+}
+
+function currentHourWindow(){
+  const cur=nowMin();
+  const s=Math.floor(cur/60)*60;
+  const e=s+60;
+  return {s,e};
+}
+function computeHourAvail(lineKey, shiftKey){
+  const hw=currentHourWindow();
+  // clamp within shift window
+  const w=shiftWindow(lineKey, shiftKey);
+  const ss=toMin(w.start), se=toMin(w.end);
+  const s=Math.max(hw.s, ss);
+  const e=Math.min(hw.e, se);
+  const now=nowMin();
+  const cn=Math.max(s, Math.min(e, now));
+  const hourAvail=availMinutesBetween(lineKey, shiftKey, s, e);
+  const hourElapsedAvail=availMinutesBetween(lineKey, shiftKey, s, cn);
+  const hourRemAvail=availMinutesBetween(lineKey, shiftKey, cn, e);
+  return {s,e,cn,hourAvail,hourElapsedAvail,hourRemAvail};
+}
+
+/* ===== Core calc ===== */
+function num(id){
+  const v = Number($(id).value);
+  return Number.isFinite(v) ? v : 0;
+}
+
+function setKPI(el, val, cls){
+  el.classList.remove("good","bad","warn");
+  if(cls) el.classList.add(cls);
+  el.textContent = val;
+}
+
+function calc(){
+  const line=getLine();
+  const shift = (line==="PICTURES") ? $("shiftSel").value : "DAY";
+  const capRef = (line==="PICTURES") ? (shift==="P2" ? CAPACITY.PICTURES.perDay : CAPACITY.PICTURES.perShift) : (CAPACITY[line]||0);
+
+  // Always show cap + takt
+  $("capV").textContent = (line==="PICTURES") ? (shift==="P2" ? (capRef + " (day)") : (capRef + " / shift")) : String(capRef);
+  const taktBaseMin = (line==="PICTURES" && shift==="P2") ? 910 : 455;
+  const takt = capRef>0 ? (taktBaseMin*60)/capRef : 0;
+  $("taktV").textContent = capRef>0 ? String(Math.round(takt)) : "—";
+
+  // Day avail and expected-to-now
+  const day = computeDayAvail(line, shift);
+  const expNow = (capRef>0 && day.plannedAvail>0) ? (capRef * (day.elapsedAvail/day.plannedAvail)) : 0;
+  $("expNowV").textContent = expNow.toFixed(1);
+  $("expNowNote").textContent = `Avail elapsed ${day.elapsedAvail.toFixed(0)} min / planned ${day.plannedAvail.toFixed(0)} min`;
+
+  const sched = num("sched");
+  const carry = num("carry");
+  const done = num("done");
+  const req = sched + carry;
+  $("reqV").textContent = req.toFixed(0);
+
+  // HPR day (capacity-based expected-to-now)
+  const hpr = expNow>0 ? (done/expNow) : 0;
+  setKPI($("hprV"), (hpr*100).toFixed(1)+"%", done>expNow ? "good" : (done<expNow ? "bad" : "warn"));
+
+  // Cycle time (day pace): sec/unit = elapsedAvail*60 / done
+  let ctText="—";
+  if(done>0 && day.elapsedAvail>0){
+    const ct = (day.elapsedAvail*60)/done;
+    ctText = `Current CT ${Math.round(ct)} sec/unit`;
+  } else {
+    ctText = "Current CT — (needs production)";
+  }
+  $("ctNote").textContent = ctText;
+
+  // Projected finish time based on DAY HPR (capacity pace)
+  const unitsRem = Math.max(0, req - done);
+  const upm100 = (capRef>0 && day.plannedAvail>0) ? (capRef/day.plannedAvail) : 0;
+  const paceUpm = upm100 * hpr; // day pace implied by HPR
+  if(req<=0){
+    $("finishV").textContent = "—";
+    $("finishNote").textContent = "Enter schedule (and carryover if any).";
+  } else if(unitsRem<=0){
+    setKPI($("finishV"), "COMPLETE", "good");
+    $("finishNote").textContent = "Total required complete.";
+  } else if(paceUpm>0){
+    const minsToFinish = unitsRem / paceUpm;
+    const finishAt = day.clampedNow + minsToFinish;
+    $("finishV").textContent = fmtClock(finishAt);
+    $("finishNote").textContent = "Projected completion using DAY HPR.";
+  } else {
+    $("finishV").textContent = "—";
+    $("finishNote").textContent = "Enter production to calculate finish time.";
+  }
+
+  // Recovery guidance (win the day)
+  if(req<=0){
+    $("recoveryTitle").textContent="—";
+    $("recoveryBody").textContent="Enter schedule + carryover to generate recovery guidance.";
+  } else {
+    // required pace from now to finish by shift end (no OT) using remaining available minutes
+    const needUpmNoOT = (day.remAvail>0) ? (unitsRem/day.remAvail) : Infinity;
+    const needPerHrNoOT = needUpmNoOT*60;
+    const canWinNoOT = (needUpmNoOT <= upm100*1.25) || (unitsRem===0); // heuristic
+    // current implied upm from day HPR
+    const curUpm = paceUpm;
+    const deltaUpm = needUpmNoOT - curUpm;
+    const deltaPerHr = deltaUpm*60;
+
+    const title = (unitsRem<=0) ? "Complete." : `Need +${Math.max(0,deltaPerHr).toFixed(1)}/hr vs current pace`;
+    $("recoveryTitle").textContent = title;
+
+    let body = "";
+    body += `Remaining: ${unitsRem.toFixed(0)} units. `;
+    if(Number.isFinite(needPerHrNoOT)){
+      body += `To finish by shift end (no OT), need ${needPerHrNoOT.toFixed(1)}/hr from now. `;
+    }
+    if(curUpm>0){
+      body += `Current implied pace: ${(curUpm*60).toFixed(1)}/hr. `;
+    }
+    body += `First question: “What’s the recovery?” (SWIP + staffing support + protect the constraint).`;
+    $("recoveryBody").textContent = body;
+  }
+
+  // Current hour pace checker
+  const hr = computeHourAvail(line, shift);
+  $("hourWin").textContent = `${fmtClock(hr.s)}–${fmtClock(hr.e)}`;
+  $("hourNote").textContent = `Avail this hour: ${hr.hourAvail.toFixed(0)} min (elapsed ${hr.hourElapsedAvail.toFixed(0)}, remaining ${hr.hourRemAvail.toFixed(0)})`;
+  
+  const hourTarget = (capRef>0 && day.plannedAvail>0) ? (capRef/day.plannedAvail*hr.hourAvail) : 0; // full-hour (avail-adjusted) target @100%
+  const hourExpectedNow = (capRef>0 && day.plannedAvail>0) ? (capRef/day.plannedAvail*hr.hourElapsedAvail) : 0; // expected by this minute @100%
+  $("hourTarget").textContent = hourTarget.toFixed(1);
+
+  // Gap RIGHT NOW in this hour (minute-accurate)
+  const hourGapNow = (curHourUnits - hourExpectedNow); // + = ahead, - = behind
+  if($("hourDeltaUnits")) {
+    const sign = hourGapNow>0 ? "+" : "";
+    $("hourDeltaUnits").textContent = sign + hourGapNow.toFixed(1);
+    $("hourDeltaUnits").classList.remove("good","bad","warn");
+    $("hourDeltaUnits").classList.add(hourGapNow>=0 ? "good" : "bad");
+  }
+  if($("hourStatus")){
+    $("hourStatus").classList.remove("good","bad","warn");
+    if(hourGapNow >= 0){
+      $("hourStatus").textContent = "AHEAD";
+      $("hourStatus").classList.add("good");
+      $("hourStatusNote").textContent = `Ahead by ${hourGapNow.toFixed(1)} units so far this hour.`;
+    } else {
+      $("hourStatus").textContent = "BEHIND";
+      $("hourStatus").classList.add("bad");
+      $("hourStatusNote").textContent = `Behind by ${Math.abs(hourGapNow).toFixed(1)} units so far this hour.`;
+    }
+  }
+
+  // Still show what it takes to HIT THE HOUR by the top of the hour
+  const hourNeedToHit = Math.max(0, hourTarget - curHourUnits);
+  $("hourNeed").textContent = hourNeedToHit.toFixed(1);
+
+if(hr.hourRemAvail>0){
+    const needRate = hourNeedToHit / hr.hourRemAvail; // units per avail minute
+    const needPer10 = needRate*10;
+    $("hourNeedNote").textContent = `Need ${(needRate*60).toFixed(1)}/hr for remainder (~${needPer10.toFixed(1)} per 10 min).`;
+  } else {
+    $("hourNeedNote").textContent = "Hour complete or no available time remaining.";
+  }
+
+  // Teams preview + recovery planning
+  renderPlayButtons();
+  const selKeys = loadPlays();
+  const selLabels = selKeys.map(k => (PLAYS.find(p=>p.key===k)||{label:k}).label);
+  const notes = ($("playNotes") && $("playNotes").value) ? $("playNotes").value : "";
+
+  // Determine OT needed based on whether projected finish exceeds shift end (clamped within window)
+  const shiftEnd = day.e;
+  const projFinishMins = (unitsRem<=0 || paceUpm<=0) ? null : (day.clampedNow + (unitsRem / paceUpm));
+  const otNeeded = (projFinishMins !== null) ? (projFinishMins > shiftEnd + 0.5) : false;
+
+  // Carryover forecasts for 0/+1/+2 hours OT (carry remaining after remaining available time)
+  const extraBreak10 = false; // keep simple; can add toggle later if desired
+  const f0 = scenarioForecast(unitsRem, day, upm100, hpr, 0, false);
+  const f1 = scenarioForecast(unitsRem, day, upm100, hpr, 60, extraBreak10);
+  const f2 = scenarioForecast(unitsRem, day, upm100, hpr, 120, extraBreak10);
+
+  const nowStr = fmtClock(day.clampedNow);
+  const projFinishStr = (projFinishMins===null) ? "—" : fmtClock(projFinishMins);
+  const ot1FinishStr = (f1.finishAt===null) ? "—" : fmtClock(f1.finishAt);
+  const ot2FinishStr = (f2.finishAt===null) ? "—" : fmtClock(f2.finishAt);
+
+  const ctx = {
+    line, shift,
+    nowStr,
+    capRef,
+    expNow,
+    done,
+    hprPct:(hpr*100),
+    gapNow:(done-expNow),
+    req,
+    unitsRem,
+    needPerHrNoOT: (day.remAvail>0) ? (unitsRem/day.remAvail*60) : NaN,
+    projFinish: projFinishStr,
+    otNeeded,
+    ot1Finish: ot1FinishStr,
+    ot2Finish: ot2FinishStr,
+    carryNoOT: f0.carry ?? 0,
+    carryOT1: f1.carry ?? 0,
+    carryOT2: f2.carry ?? 0,
+    plays: selLabels,
+    notes
+  };
+
+  const teamsText = buildTeamsText(ctx);
+  if($("teamsPreview")) $("teamsPreview").textContent = teamsText;
+
+}
+
+$("calcBtn").addEventListener("click", calc);
+["shiftSel","sched","carry","done","curHour","playNotes"].forEach(id=>{
+  $(id).addEventListener("input", calc);
+  $(id).addEventListener("change", calc);
+});
+$("shiftSel").addEventListener("change", ()=>{
+  // show pictures help only on pictures
+  $("picsHelp").style.display = (getLine()==="PICTURES") ? "block" : "none";
+  calc();
+});
+
+// init (run after all helpers are defined)
+window.addEventListener("load", ()=>{
+  try{ renderLineButtons(); }catch(e){}
+  try{ $("picsHelp").style.display = (getLine()==="PICTURES") ? "block" : "none"; }catch(e){}
+  try{ renderPlayButtons(); }catch(e){}
+  try{ initTeamsCopy(); }catch(e){}
+  try{ calc(); }catch(e){}
+});
+/* ===== Recovery plays + Teams output ===== */
+const PLAYS = [
+  {key:"SWIP", label:"Build/Move SWIP"},
+  {key:"HELP", label:"Send 10‑min Helper"},
+  {key:"REBAL", label:"Rebalance Stations"},
+  {key:"SEQ", label:"Protect Work Sequence"},
+  {key:"QC", label:"Protect Quality Points"},
+  {key:"CONSTR", label:"Protect Constraint"},
+  {key:"ESC", label:"Escalate Now (Andon)"}
+];
+const LS_PLAYS = "hpr_selected_plays_v1";
+
+function loadPlays(){
+  try{
+    const raw = localStorage.getItem(LS_PLAYS);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
+}
+function savePlays(arr){
+  try{ localStorage.setItem(LS_PLAYS, JSON.stringify(arr)); }catch(e){}
+}
+function togglePlay(key){
+  const cur = new Set(loadPlays());
+  if(cur.has(key)) cur.delete(key); else cur.add(key);
+  savePlays([...cur]);
+  renderPlayButtons();
+  calc(); // refresh teams preview
+}
+function renderPlayButtons(){
+  const wrap = $("playButtons");
+  if(!wrap) return;
+  wrap.innerHTML = "";
+  const sel = new Set(loadPlays());
+  PLAYS.forEach(p=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="linebtn playbtn" + (sel.has(p.key) ? " active" : "");
+    b.textContent=p.label;
+    b.addEventListener("click", ()=>togglePlay(p.key));
+    wrap.appendChild(b);
+  });
+  const list = [...sel].map(k=> (PLAYS.find(p=>p.key===k)||{label:k}).label);
+  const tgt = $("playSelected");
+  if(tgt) tgt.textContent = list.length ? ("Selected: " + list.join(" | ")) : "Selected: —";
+}
+function lineLabel(key){
+  const m = LINES.find(x=>x.key===key);
+  return m ? m.label : key;
+}
+function shiftLabel(lineKey, shiftKey){
+  if(lineKey==="PICTURES"){
+    return shiftKey==="P2" ? "Pictures 2nd Shift" : "Day Shift";
+  }
+  return "Day Shift";
+}
+
+// Compute finish time and carryover for OT scenarios based on required pace from current DAY HPR
+function scenarioForecast(unitsRem, day, upm100, hpr, otMinAdd, extraBreak10){
+  // Extend end time by otMinAdd; add extra break (10 min) if toggled and total span reaches 10h day
+  let remAvail = day.remAvail;
+  if(otMinAdd>0){
+    remAvail += otMinAdd; // assume OT minutes all available (break handled separately below if extra)
+    if(extraBreak10) remAvail = Math.max(0, remAvail-10);
+  }
+  const paceUpm = upm100 * hpr;
+  let finishAt = null;
+  let forecastEndUnits = null;
+  let carry = null;
+  if(paceUpm>0){
+    const minsToFinish = unitsRem / paceUpm;
+    finishAt = day.clampedNow + minsToFinish;
+    forecastEndUnits = (day.elapsedAvail + remAvail) * paceUpm;
+  } else {
+    forecastEndUnits = 0;
+  }
+  // forecastEndUnits is units produced for whole day window; but for carryover we need end units vs total required using current pace for remaining minutes
+  const producedRemaining = remAvail * paceUpm;
+  const endUnits = producedRemaining; // additional units from now
+  carry = Math.max(0, unitsRem - endUnits);
+  return {remAvail, paceUpm, finishAt, carry};
+}
+
+function buildTeamsText(ctx){
+  const {line, shift, nowStr, capRef, expNow, done, hprPct, gapNow, req, unitsRem,
+         needPerHrNoOT, projFinish, otNeeded, ot1Finish, ot2Finish, carryNoOT, carryOT1, carryOT2,
+         plays, notes} = ctx;
+
+  const yn = otNeeded ? "YES" : "NO";
+  const gapTxt = (gapNow>=0 ? `+${gapNow.toFixed(1)}` : gapNow.toFixed(1));
+  const needTxt = Number.isFinite(needPerHrNoOT) ? needPerHrNoOT.toFixed(1) : "—";
+
+  let msg = "";
+  msg += `HPR Update — ${lineLabel(line)} (${shiftLabel(line,shift)}) — ${nowStr}\n`;
+  msg += `Day HPR: ${hprPct.toFixed(1)}% | Gap to target now: ${gapTxt} units | Need from now: ${needTxt}/hr\n`;
+  msg += `Produced: ${done.toFixed(0)} | Expected-now(100%): ${expNow.toFixed(1)} | Total required (sched+carry): ${req.toFixed(0)} | Remaining: ${unitsRem.toFixed(0)}\n`;
+  msg += `Projected finish (DAY HPR): ${projFinish}\n`;
+  msg += `OT needed: ${yn}\n`;
+  if(otNeeded){
+    msg += `• No OT carryover est: ${carryNoOT.toFixed(0)}\n`;
+    msg += `• +1 hr OT carryover est: ${carryOT1.toFixed(0)} | finish: ${ot1Finish}\n`;
+    msg += `• +2 hr OT carryover est: ${carryOT2.toFixed(0)} | finish: ${ot2Finish}\n`;
+  }
+  msg += `Recovery (next 60 min): ${plays.length?plays.join(" | "):"—"}\n`;
+  if(notes && notes.trim()) msg += `Details: ${notes.trim()}\n`;
+  msg += `Commitment: Next check-in at top of next hour.`;
+  return msg;
+}
+
+// Hook copy button
+function initTeamsCopy(){
+  const btn = $("copyTeamsBtn");
+  if(!btn) return;
+  btn.addEventListener("click", async ()=>{
+    const txt = $("teamsPreview").textContent || "";
+    try{
+      await navigator.clipboard.writeText(txt);
+      $("copyMsg").textContent = "Copied to clipboard.";
+      setTimeout(()=>{$("copyMsg").textContent="Creates a clean paste for Teams."}, 2500);
+    }catch(e){
+      // fallback
+      const ta=document.createElement("textarea");
+      ta.value=txt; document.body.appendChild(ta);
+      ta.select(); document.execCommand("copy");
+      document.body.removeChild(ta);
+      $("copyMsg").textContent = "Copied (fallback).";
+      setTimeout(()=>{$("copyMsg").textContent="Creates a clean paste for Teams."}, 2500);
+    }
+  });
+}
+
+</script>
+</body>
+</html>
