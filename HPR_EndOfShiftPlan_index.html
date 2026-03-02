@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#0b0c10"/>
+<title>HPR End-of-Shift Plan</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0b0c10;
+  --panel:#13151c;
+  --panel2:#0f1117;
+  --ink:#e8edf5;
+  --muted:#a8b3c7;
+  --line:#242a37;
+  --blue:#3aa0ff;
+  --orange:#ff8a1f;
+  --good:#22c55e;
+  --bad:#ef4444;
+  --warn:#f59e0b;
+  --chip:#1b2230;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --radius: 16px;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:linear-gradient(180deg, #0b0c10 0%, #07080c 100%);
+  color:var(--ink);
+  font-family:"DM Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+a{color:inherit}
+.wrap{max-width:1050px;margin:0 auto;padding:14px 14px 28px}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:rgba(19,21,28,.75);
+  backdrop-filter: blur(10px);
+}
+.brand{
+  display:flex;align-items:baseline;gap:10px;min-width:0;
+}
+.brand .title{
+  font-family:"Syne", system-ui;
+  font-size:18px;font-weight:800;letter-spacing:.2px;white-space:nowrap;
+}
+.brand .sub{
+  font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.clock{
+  font-family:"DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size:12px;color:var(--muted);
+  padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(11,12,16,.55);
+  white-space:nowrap;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+  margin-top:12px;
+}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+}
+
+.card{
+  background:linear-gradient(180deg, rgba(19,21,28,.9), rgba(15,17,23,.9));
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:12px;
+}
+.card h3{
+  margin:0 0 10px 0;
+  font-family:"Syne", system-ui;
+  font-size:14px;letter-spacing:.2px;
+}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.field{
+  display:flex;flex-direction:column;gap:6px;min-width:160px;flex:1;
+}
+.label{font-size:12px;color:var(--muted)}
+input, select, textarea{
+  width:100%;
+  padding:10px 10px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:rgba(9,10,14,.7);
+  color:var(--ink);
+  outline:none;
+  font-size:14px;
+}
+textarea{min-height:70px;resize:vertical}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+button{
+  border:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(27,34,48,.9), rgba(14,18,26,.9));
+  color:var(--ink);
+  padding:10px 12px;
+  border-radius:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+button:active{transform:translateY(1px)}
+button.primary{
+  border-color:rgba(58,160,255,.5);
+  background:linear-gradient(180deg, rgba(58,160,255,.28), rgba(58,160,255,.10));
+}
+button.orange{
+  border-color:rgba(255,138,31,.55);
+  background:linear-gradient(180deg, rgba(255,138,31,.26), rgba(255,138,31,.10));
+}
+button.good{
+  border-color:rgba(34,197,94,.55);
+  background:linear-gradient(180deg, rgba(34,197,94,.22), rgba(34,197,94,.08));
+}
+button.bad{
+  border-color:rgba(239,68,68,.55);
+  background:linear-gradient(180deg, rgba(239,68,68,.22), rgba(239,68,68,.08));
+}
+
+.lineBtns{display:flex;gap:8px;flex-wrap:wrap}
+.lineBtn{
+  padding:10px 12px;border-radius:999px;font-weight:800;
+}
+.lineBtn[data-active="true"]{
+  outline:2px solid rgba(58,160,255,.55);
+  border-color:rgba(58,160,255,.6);
+}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{
+  padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(27,34,48,.55);
+  font-size:12px;color:var(--muted);font-family:"DM Mono", ui-monospace;
+}
+.pill strong{color:var(--ink);font-family:"DM Sans"}
+.pill.good{border-color:rgba(34,197,94,.4)}
+.pill.bad{border-color:rgba(239,68,68,.4)}
+.pill.warn{border-color:rgba(245,158,11,.45)}
+.pill.blue{border-color:rgba(58,160,255,.45)}
+.pill.orange{border-color:rgba(255,138,31,.5)}
+
+.hrgrid{
+  display:grid;grid-template-columns: repeat(9, 1fr);
+  gap:6px;margin-top:10px
+}
+.hrgrid .cell{
+  text-align:center;
+  padding:8px 0;border-radius:10px;border:1px solid var(--line);
+  background:rgba(9,10,14,.45);
+  font-family:"DM Mono", ui-monospace;
+  font-size:12px;color:var(--muted);
+}
+.hrgrid .cell span{display:block;color:var(--ink);font-weight:800;font-family:"DM Sans";font-size:12px}
+
+.report{
+  margin-top:12px;
+  background:rgba(11,12,16,.45);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+.tableWrap{overflow:auto}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:820px;
+}
+thead th{
+  position:sticky; top:0;
+  background:#0b2e4a;
+  color:white;
+  font-size:12px;
+  text-align:left;
+  padding:10px 8px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+tbody td{
+  font-size:12px;
+  padding:9px 8px;
+  border-top:1px solid rgba(255,255,255,.06);
+  vertical-align:top;
+}
+tbody tr:nth-child(odd){background:rgba(255,255,255,.02)}
+tbody tr.over{background:rgba(239,68,68,.16)}
+tbody tr.nextOver{background:rgba(245,158,11,.18)}
+tbody tr.crossLine td{border-top:3px solid rgba(239,68,68,.9)}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:2px 8px;border-radius:999px;font-weight:800;font-size:11px;
+  border:1px solid var(--line);background:rgba(27,34,48,.45);
+}
+.badge.high{border-color:rgba(255,138,31,.6);color:#ffd6a8}
+.badge.ok{border-color:rgba(34,197,94,.55);color:#bbf7d0}
+.badge.risk{border-color:rgba(239,68,68,.55);color:#fecaca}
+.mono{font-family:"DM Mono", ui-monospace}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.kicker{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.35}
+
+.teams{
+  white-space:pre-wrap;
+  font-family:"DM Mono", ui-monospace;
+  font-size:12px;
+  background:rgba(9,10,14,.55);
+  border:1px dashed rgba(168,179,199,.35);
+  border-radius:14px;
+  padding:10px;
+  color:var(--ink);
+}
+
+.notice{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,138,31,.35);
+  background:rgba(255,138,31,.08);
+  color:#ffd6a8;
+  font-size:12px;
+}
+
+/* PRINT */
+@media print{
+  :root{ --ink:#000; }
+  body{ background:white; color:#000; }
+  .wrap{max-width:none;padding:0}
+  .topbar, .card.controls, .btnrow, .notice, .kicker, .teamsControls { display:none !important; }
+  .card, .report{ box-shadow:none; border:1px solid #ccc; background:white; }
+  table{ min-width:0; }
+  thead th{ background:#0b2e4a !important; color:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  tbody tr.over{ background:#fca5a5 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  tbody tr.nextOver{ background:#fde68a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  .pill{ background:#f2f4f7 !important; border-color:#ccc !important; color:#111 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  .hrgrid .cell{ background:#f2f4f7 !important; border-color:#ccc !important; color:#111 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="title">HPR End-of-Shift Plan</div>
+      <div class="sub">Carryover-first schedule projection • print-ready</div>
+    </div>
+    <div class="clock" id="clock">—</div>
+  </div>
+
+  <div class="grid">
+    <div class="card controls">
+      <h3>1) Select Supervisor + Line</h3>
+      <div class="row">
+        <div class="field">
+          <div class="label">Supervisor</div>
+          <select id="supervisor">
+            <option value="Isaiah">Isaiah</option>
+            <option value="Sonia">Sonia</option>
+            <option value="Sean">Sean</option>
+            <option value="(Other)">(Other)</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="label">Custom supervisor (if Other)</div>
+          <input id="supervisorOther" placeholder="Type name (optional)"/>
+        </div>
+      </div>
+
+      <div style="height:10px"></div>
+      <div class="label">Line</div>
+      <div class="lineBtns" id="lineBtns"></div>
+
+      <div style="height:12px"></div>
+      <h3>2) Enter Carryover (always first)</h3>
+      <div class="row">
+        <div class="field">
+          <div class="label">Carryover units from prior day</div>
+          <input id="carryover" type="number" min="0" step="1" value="0"/>
+        </div>
+        <div class="field">
+          <div class="label">Schedule file (tomorrow) — upload .txt</div>
+          <input id="file" type="file" accept=".txt,.text"/>
+        </div>
+      </div>
+
+      <div class="btnrow">
+        <button class="primary" id="buildBtn">Build Plan</button>
+        <button class="orange" id="printBtn">Print / Save PDF</button>
+        <button id="csvBtn">Export CSV</button>
+        <button id="jsonBtn">Export JSON</button>
+      </div>
+
+      <div class="notice">
+        Carryover is inserted as the first “batch” and shifts all time-of-day estimates.
+      </div>
+      <div class="kicker">
+        Rules: Line 1 high = HOP • Line 2/3 high = SH (Line 2 also FF) • PX/SL high = SL • Casement high = WW.<br/>
+        Service handling: Line 2/3/PX ignore SVC; Line 1 + Casement include SVC (ignore only Screens).
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Plan Summary</h3>
+
+      <div class="pills" id="summaryPills">
+        <div class="pill blue"><strong>Line</strong> <span id="pillLine">—</span></div>
+        <div class="pill"><strong>Capacity</strong> <span id="pillCap">—</span></div>
+        <div class="pill"><strong>Carryover</strong> <span id="pillCarry">—</span></div>
+        <div class="pill"><strong>Scheduled</strong> <span id="pillSched">—</span></div>
+        <div class="pill"><strong>Total Demand</strong> <span id="pillTotal">—</span></div>
+        <div class="pill"><strong>Projected Finish</strong> <span id="pillFinish">—</span></div>
+        <div class="pill" id="pillOtWrap"><strong>OT</strong> <span id="pillOT">—</span></div>
+        <div class="pill orange"><strong>High Units</strong> <span id="pillHigh">—</span></div>
+        <div class="pill"><strong>High Impact</strong> <span id="pillImpact">—</span></div>
+        <div class="pill warn"><strong>Next Delivery</strong> <span id="pillNext">—</span></div>
+      </div>
+
+      <div class="hrgrid" id="hrgrid">
+        <!-- 6–2 grid -->
+      </div>
+
+      <div style="height:10px"></div>
+      <h3 style="margin-bottom:8px">Teams Post</h3>
+      <div class="teamsControls btnrow" style="margin-top:0">
+        <button class="good" id="copyTeamsBtn">Copy Teams Text</button>
+      </div>
+      <div class="teams" id="teamsOut">Build a plan to generate Teams text.</div>
+    </div>
+  </div>
+
+  <div class="report card" style="margin-top:12px">
+    <h3 style="margin:0 0 10px 0">Schedule Table</h3>
+    <div class="muted small" id="tableMeta">—</div>
+    <div class="tableWrap" style="margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th>Batch</th>
+            <th>Route(s)</th>
+            <th class="mono">Qty Needed</th>
+            <th class="mono">Qty Completed</th>
+            <th class="mono">Qty Required</th>
+            <th>High</th>
+            <th class="mono">Est. Time of Day</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="7" class="muted">Upload a schedule and click Build Plan.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/*** CONFIG ***/
+const LINES = [
+  {key:"LINE1", label:"Line 1", cap:260, breaks:[["09:00","09:15"],["11:45","12:15"]], highRules:["HOP"], ignoreSvc:false},
+  {key:"LINE2", label:"Line 2", cap:385, breaks:[["09:10","09:25"],["12:15","12:45"]], highRules:["SH","FF"], ignoreSvc:true},
+  {key:"LINE3", label:"Line 3", cap:195, breaks:[["09:10","09:25"],["12:15","12:45"]], highRules:["SH"], ignoreSvc:true},
+  {key:"PX / SLIDER", label:"PX/SL", cap:115, breaks:[["09:00","09:15"],["11:45","12:15"]], highRules:["SL"], ignoreSvc:true},
+  {key:"CASEMENT", label:"Casement", cap:108, breaks:[["08:45","09:00"],["11:15","11:45"]], highRules:["WW"], ignoreSvc:false},
+];
+
+const SHIFT_START = "06:00";
+const SHIFT_END   = "14:30"; // 2:30 PM
+const HOURS = ["6","7","8","9","10","11","12","1","2"];
+
+function hhmmToMinFrom6(hhmm){
+  const [h,m]=hhmm.split(":").map(Number);
+  return (h-6)*60 + m;
+}
+function minFrom6ToTimeStr(min){
+  const base = new Date();
+  // use today's date; only time formatting matters
+  base.setHours(6,0,0,0);
+  const d = new Date(base.getTime() + Math.round(min)*60000);
+  let hr = d.getHours();
+  const ampm = hr>=12 ? "PM" : "AM";
+  hr = hr%12; if(hr===0) hr=12;
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  return `${hr}:${mm} ${ampm}`;
+}
+function nextDeliveryCode(prodDate){
+  // 100 Mon, 200 Tue, 300 Wed, 400 Thu, 500 Fri
+  const map=[100,200,300,400,500];
+  const wd = prodDate.getDay(); // 0 Sun ... 6 Sat
+  const idx = wd===0?0:wd-1; // Mon=0
+  // next workday: if Fri -> Mon
+  const nextIdx = (idx+1) % 5;
+  return map[nextIdx];
+}
+function formatDate(d){
+  const mm=String(d.getMonth()+1).padStart(2,"0");
+  const dd=String(d.getDate()).padStart(2,"0");
+  const yy=d.getFullYear();
+  return `${mm}/${dd}/${yy}`;
+}
+
+let state = {
+  lineKey: "LINE1",
+  scheduleText: "",
+  scheduleDate: null,
+  rows: [],
+  carryover: 0
+};
+
+function buildLineButtons(){
+  const host = document.getElementById("lineBtns");
+  host.innerHTML = "";
+  LINES.forEach(l=>{
+    const b=document.createElement("button");
+    b.className="lineBtn";
+    b.textContent=l.label;
+    b.dataset.key=l.key;
+    b.dataset.active = (l.key===state.lineKey) ? "true":"false";
+    b.onclick=()=>{
+      state.lineKey=l.key;
+      [...host.querySelectorAll("button")].forEach(x=>x.dataset.active="false");
+      b.dataset.active="true";
+      // update pills immediately
+      setPillBasics();
+    };
+    host.appendChild(b);
+  });
+}
+
+function buildHourGrid(){
+  const g=document.getElementById("hrgrid");
+  g.innerHTML="";
+  HOURS.forEach(h=>{
+    const div=document.createElement("div");
+    div.className="cell";
+    div.innerHTML = `<span>${h}</span><div class="muted">strike</div>`;
+    g.appendChild(div);
+  });
+}
+
+function tickClock(){
+  const el=document.getElementById("clock");
+  const d=new Date();
+  const mm=String(d.getMinutes()).padStart(2,"0");
+  let hr=d.getHours(), ampm=hr>=12?"PM":"AM";
+  hr=hr%12; if(hr===0) hr=12;
+  el.textContent = `${hr}:${mm} ${ampm}`;
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+function parseProductionDate(text){
+  const m = text.match(/Production Date:\s*(\d+)\/(\d+)\/(\d+)/i);
+  if(!m) return null;
+  const month=parseInt(m[1],10), day=parseInt(m[2],10), year=parseInt(m[3],10);
+  return new Date(year, month-1, day);
+}
+
+function extractSectionLines(text, key){
+  // find line that starts with key, then take until next section header
+  const lines = text.split(/\r?\n/);
+  let inSec=false;
+  const out=[];
+  const secRe = /^(LINE1|LINE2|LINE3|PX \/ SLIDER|CASEMENT)\b/;
+  for(const ln of lines){
+    if(secRe.test(ln.trim())){
+      inSec = ln.trim().startsWith(key);
+      continue;
+    }
+    if(inSec) out.push(ln);
+  }
+  return out;
+}
+
+function isScreenLine(ln){
+  return ln.toLowerCase().includes("screen");
+}
+function isServiceLine(ln){
+  return /\bSVC\b/.test(ln) || ln.includes("SRV");
+}
+function extractRoutes(ln){
+  const routes = ln.match(/\b(?:TRT|RT)\d+\b/g);
+  return routes ? [...new Set(routes)].join(", ") : "";
+}
+function parseRow(ln, lineCfg){
+  // Pattern: x/y z (we use y=need, z=done)
+  const m = ln.match(/(\d+)\s*\/\s*(\d+)\s+(\d+)/);
+  if(!m) return null;
+  const need = parseInt(m[2],10);
+  const done = parseInt(m[3],10);
+  const req  = Math.max(0, need - done);
+  const batch = ln.trim().split(/\s+/)[0] || "";
+  const routes = extractRoutes(ln);
+  const high = lineCfg.highRules.some(tok => ln.includes(tok));
+  return { batch, routes, need, done, req, high, raw: ln };
+}
+
+function addBreaks(startMin, workMin, breaks){
+  // breaks are [startMin,endMin] minutes from 6:00
+  // If start inside break, push start to break end.
+  for(const [bs,be] of breaks){
+    if(bs <= startMin && startMin < be){
+      startMin = be;
+      break;
+    }
+  }
+  let end = startMin + workMin;
+  // Add all breaks whose start is crossed; iterate until stable
+  while(true){
+    let add=0;
+    for(const [bs,be] of breaks){
+      if(startMin < bs && bs < end){
+        add += (be-bs);
+      }
+    }
+    if(add===0) return end;
+    end += add;
+  }
+}
+
+function buildPlan(){
+  const cfg = LINES.find(x=>x.key===state.lineKey);
+  const carry = Math.max(0, parseInt(document.getElementById("carryover").value||"0",10));
+  state.carryover = carry;
+
+  if(!state.scheduleText){
+    alert("Upload a schedule file first.");
+    return;
+  }
+  const prodDate = parseProductionDate(state.scheduleText) || new Date();
+  state.scheduleDate = prodDate;
+  const nextCode = nextDeliveryCode(prodDate);
+
+  const secLines = extractSectionLines(state.scheduleText, cfg.key);
+
+  // Build schedule rows
+  const rows = [];
+
+  // Insert carryover-first synthetic batch
+  if(carry>0){
+    rows.push({
+      batch:"CARRYOVER",
+      routes:"PRIOR DAY",
+      need:carry,
+      done:0,
+      req:carry,
+      high:false,
+      raw:""
+    });
+  }
+
+  for(const ln of secLines){
+    if(!ln || !ln.trim()) continue;
+    if(ln.includes("Qty") && ln.includes("Description")) continue; // header lines
+    if(isScreenLine(ln)) continue;
+    if(cfg.ignoreSvc && isServiceLine(ln)) continue;
+    const r = parseRow(ln, cfg);
+    if(r) rows.push(r);
+  }
+
+  // Compute time-of-day estimates with breaks
+  const breaks = cfg.breaks.map(([s,e])=>[hhmmToMinFrom6(s), hhmmToMinFrom6(e)]);
+  const minPerUnit = 455 / cfg.cap;
+
+  let clock=0;
+  let impactStart=null, impactEnd=null;
+  let highUnits=0;
+  let totalSched=0; // schedule units excluding carryover
+  let totalDemand=0;
+  let nextUnits=0, nextUnitsAfter=0;
+
+  const shiftEndMin = hhmmToMinFrom6(SHIFT_END);
+
+  // totals
+  for(const r of rows){
+    if(r.batch!=="CARRYOVER") totalSched += r.need;
+  }
+  totalDemand = totalSched + carry;
+
+  // compute each row end time
+  rows.forEach(r=>{
+    const work = r.need * minPerUnit;
+    const end = addBreaks(clock, work, breaks);
+    r.endMin = end;
+    r.estTime = minFrom6ToTimeStr(end);
+    r.crossesShift = end > shiftEndMin;
+
+    if(r.high){
+      highUnits += r.need;
+      if(impactStart===null) impactStart = clock;
+      impactEnd = end;
+    }
+    // next delivery
+    if(r.routes && r.routes.match(new RegExp(`(?:TRT|RT)${nextCode}\\b`))){
+      nextUnits += r.need;
+      if(end > shiftEndMin) nextUnitsAfter += r.need;
+    }
+    clock = end;
+  });
+
+  const projectedFinish = minFrom6ToTimeStr(clock);
+  const otMin = Math.max(0, clock - shiftEndMin);
+  const otHr = otMin/60;
+  const otNeeded = otMin > 0.1;
+
+  const impactStr = (impactStart===null) ? "—" : `${minFrom6ToTimeStr(impactStart)} – ${minFrom6ToTimeStr(impactEnd)}`;
+  const nextStr = nextUnitsAfter>0 ? `${nextUnits} (⚠ ${nextUnitsAfter} after 2:30)` : `${nextUnits}`;
+
+  state.rows = rows;
+
+  // Update pills
+  document.getElementById("pillLine").textContent = cfg.label;
+  document.getElementById("pillCap").textContent = `${cfg.cap}/shift`;
+  document.getElementById("pillCarry").textContent = carry;
+  document.getElementById("pillSched").textContent = totalSched;
+  document.getElementById("pillTotal").textContent = totalDemand;
+  document.getElementById("pillFinish").textContent = projectedFinish;
+  document.getElementById("pillHigh").textContent = highUnits;
+  document.getElementById("pillImpact").textContent = impactStr;
+  document.getElementById("pillNext").textContent = nextStr;
+
+  const otWrap=document.getElementById("pillOtWrap");
+  document.getElementById("pillOT").textContent = otNeeded ? `YES (${otHr.toFixed(1)} hr)` : "NO";
+  otWrap.classList.remove("good","bad","warn");
+  otWrap.classList.add(otNeeded ? "bad":"good");
+
+  // Table meta
+  const sup = getSupervisorName();
+  document.getElementById("tableMeta").textContent =
+    `Supervisor: ${sup} • Line: ${cfg.label} • Plan for: ${formatDate(prodDate)} • Carryover-first`;
+
+  // Build tbody with highlighting + 2:30 marker line
+  const tbody=document.getElementById("tbody");
+  tbody.innerHTML="";
+  let markerAdded=false;
+  rows.forEach((r, idx)=>{
+    const tr=document.createElement("tr");
+    // marker line: first row crossing 2:30
+    if(!markerAdded && r.crossesShift){
+      tr.classList.add("crossLine");
+      markerAdded=true;
+    }
+    if(r.crossesShift) tr.classList.add("over");
+    if(r.routes && r.routes.match(new RegExp(`(?:TRT|RT)${nextCode}\\b`)) && r.crossesShift){
+      tr.classList.remove("over");
+      tr.classList.add("nextOver");
+    }
+
+    tr.innerHTML = `
+      <td><span class="${r.high?'badge high':'badge ok'}">${escapeHtml(r.batch)}${r.high?' • HIGH':''}</span></td>
+      <td class="mono">${escapeHtml(r.routes||"—")}</td>
+      <td class="mono" style="text-align:center">${r.need}</td>
+      <td class="mono" style="text-align:center">${r.done}</td>
+      <td class="mono" style="text-align:center">${r.req}</td>
+      <td style="text-align:center">${r.high?'<span class="badge high">YES</span>':''}</td>
+      <td class="mono" style="text-align:center">${r.estTime}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Teams text
+  const teams = buildTeamsText({
+    sup, line: cfg.label, date: formatDate(prodDate),
+    carry, scheduled: totalSched, totalDemand, projectedFinish,
+    otNeeded, otHr, nextCode, nextUnits, nextUnitsAfter, highUnits, impactStr
+  });
+  document.getElementById("teamsOut").textContent = teams;
+}
+
+function buildTeamsText(x){
+  const otLine = x.otNeeded ? `OT needed: YES (${x.otHr.toFixed(1)} hr est.)` : "OT needed: NO";
+  const nextLine = x.nextUnitsAfter>0
+    ? `Next delivery (${x.nextCode}) due: ${x.nextUnits}  ⚠ ${x.nextUnitsAfter} after 2:30`
+    : `Next delivery (${x.nextCode}) due: ${x.nextUnits}`;
+  return [
+    `End-of-Shift Plan — ${x.line} — ${x.sup} — ${x.date}`,
+    `Carryover (built first): ${x.carry}`,
+    `Scheduled: ${x.scheduled} | Total demand: ${x.totalDemand}`,
+    `Projected finish: ${x.projectedFinish}`,
+    otLine,
+    `High content units: ${x.highUnits} | Impact: ${x.impactStr}`,
+    nextLine,
+    `Commitment: First check-in tomorrow at ______. Recovery plan: __________________________`
+  ].join("\n");
+}
+
+function getSupervisorName(){
+  const sel=document.getElementById("supervisor").value;
+  const other=document.getElementById("supervisorOther").value.trim();
+  return sel==="(Other)" && other ? other : sel;
+}
+
+function setPillBasics(){
+  const cfg = LINES.find(x=>x.key===state.lineKey);
+  document.getElementById("pillLine").textContent = cfg.label;
+  document.getElementById("pillCap").textContent = `${cfg.cap}/shift`;
+}
+function escapeHtml(s){
+  return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+}
+
+function downloadBlob(filename, blob){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 250);
+}
+
+function exportCSV(){
+  if(!state.rows.length){ alert("Build a plan first."); return; }
+  const cfg = LINES.find(x=>x.key===state.lineKey);
+  const prodDate = state.scheduleDate || new Date();
+  const sup = getSupervisorName();
+  const header = ["Supervisor","Line","PlanDate","Batch","Routes","QtyNeeded","QtyCompleted","QtyRequired","High","EstTimeOfDay"];
+  const lines = [header.join(",")];
+  state.rows.forEach(r=>{
+    const row = [
+      sup, cfg.label, formatDate(prodDate),
+      r.batch, (r.routes||""),
+      r.need, r.done, r.req, (r.high?"YES":""),
+      r.estTime
+    ].map(v=>`"${String(v).replaceAll('"','""')}"`);
+    lines.push(row.join(","));
+  });
+  downloadBlob(`EndOfShiftPlan_${cfg.label.replaceAll("/","-")}_${formatDate(prodDate).replaceAll("/","-")}.csv`,
+    new Blob([lines.join("\n")], {type:"text/csv"}));
+}
+
+function exportJSON(){
+  if(!state.rows.length){ alert("Build a plan first."); return; }
+  const cfg = LINES.find(x=>x.key===state.lineKey);
+  const prodDate = state.scheduleDate || new Date();
+  const payload = {
+    type:"end_of_shift_plan",
+    createdAt:new Date().toISOString(),
+    supervisor:getSupervisorName(),
+    line:cfg.label,
+    planDate:formatDate(prodDate),
+    carryover:state.carryover,
+    capacity:cfg.cap,
+    breaks:cfg.breaks,
+    rows:state.rows.map(r=>({
+      batch:r.batch, routes:r.routes, qty_needed:r.need, qty_completed:r.done, qty_required:r.req,
+      high:r.high, est_time_of_day:r.estTime
+    }))
+  };
+  downloadBlob(`EndOfShiftPlan_${cfg.label.replaceAll("/","-")}_${formatDate(prodDate).replaceAll("/","-")}.json`,
+    new Blob([JSON.stringify(payload,null,2)], {type:"application/json"}));
+}
+
+async function handleFile(file){
+  const text = await file.text();
+  state.scheduleText = text;
+}
+
+document.getElementById("file").addEventListener("change", async (e)=>{
+  const f = e.target.files?.[0];
+  if(!f) return;
+  await handleFile(f);
+});
+
+document.getElementById("buildBtn").addEventListener("click", buildPlan);
+document.getElementById("printBtn").addEventListener("click", ()=>window.print());
+document.getElementById("csvBtn").addEventListener("click", exportCSV);
+document.getElementById("jsonBtn").addEventListener("click", exportJSON);
+document.getElementById("copyTeamsBtn").addEventListener("click", async ()=>{
+  const txt = document.getElementById("teamsOut").textContent;
+  try{
+    await navigator.clipboard.writeText(txt);
+    const btn=document.getElementById("copyTeamsBtn");
+    const old=btn.textContent;
+    btn.textContent="Copied ✓";
+    setTimeout(()=>btn.textContent=old, 900);
+  }catch(e){
+    alert("Copy failed. You can select the text and copy manually.");
+  }
+});
+
+// init
+buildLineButtons();
+buildHourGrid();
+setPillBasics();
+</script>
+</body>
+</html>
